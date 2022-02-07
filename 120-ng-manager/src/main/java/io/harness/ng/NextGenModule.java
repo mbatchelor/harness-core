@@ -138,8 +138,8 @@ import io.harness.ng.core.event.UserGroupEntityCRUDStreamListener;
 import io.harness.ng.core.event.UserMembershipReconciliationMessageProcessor;
 import io.harness.ng.core.event.UserMembershipStreamListener;
 import io.harness.ng.core.globalkms.client.NgConnectorManagerClientModule;
-import io.harness.ng.core.globalkms.impl.GlobalKmsServiceImpl;
-import io.harness.ng.core.globalkms.services.GlobalKmsService;
+import io.harness.ng.core.globalkms.impl.NgGlobalKmsServiceImpl;
+import io.harness.ng.core.globalkms.services.NgGlobalKmsService;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.outbox.ApiKeyEventHandler;
@@ -547,7 +547,7 @@ public class NextGenModule extends AbstractModule {
     install(ConnectorModule.getInstance(appConfig.getNextGenConfig(), appConfig.getCeNextGenClientConfig()));
     install(new NgConnectorManagerClientModule(
         appConfig.getManagerClientConfig(), appConfig.getNextGenConfig().getManagerServiceSecret()));
-    bind(GlobalKmsService.class).to(GlobalKmsServiceImpl.class);
+    bind(NgGlobalKmsService.class).to(NgGlobalKmsServiceImpl.class);
     install(new ProviderModule() {
       @Provides
       @Singleton

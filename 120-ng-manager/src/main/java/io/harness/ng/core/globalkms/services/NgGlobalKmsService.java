@@ -11,6 +11,6 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.globalkms.dto.ConnectorSecretResponseDTO;
 
-public interface GlobalKmsService {
+public interface NgGlobalKmsService {
   ConnectorSecretResponseDTO updateGlobalKms(ConnectorDTO connector, SecretDTOV2 secret);
 }

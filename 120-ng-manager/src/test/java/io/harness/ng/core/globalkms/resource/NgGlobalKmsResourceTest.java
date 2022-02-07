@@ -29,7 +29,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.globalkms.dto.ConnectorSecretRequestDTO;
 import io.harness.ng.core.globalkms.dto.ConnectorSecretResponseDTO;
-import io.harness.ng.core.globalkms.services.GlobalKmsService;
+import io.harness.ng.core.globalkms.services.NgGlobalKmsService;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -41,7 +41,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class NgGlobalKmsResourceTest extends CategoryTest {
-  @Mock private GlobalKmsService globalKmsService;
+  @Mock private NgGlobalKmsService ngGlobalKmsService;
   @Mock private AccessControlClient accessControlClient;
   private NgGlobalKmsResource ngGlobalKmsResource;
   @Captor ArgumentCaptor<ConnectorDTO> connectorDTOArgumentCaptor;
@@ -50,7 +50,7 @@ public class NgGlobalKmsResourceTest extends CategoryTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    ngGlobalKmsResource = new NgGlobalKmsResource(globalKmsService, accessControlClient);
+    ngGlobalKmsResource = new NgGlobalKmsResource(ngGlobalKmsService, accessControlClient);
   }
 
   @Test
@@ -66,13 +66,14 @@ public class NgGlobalKmsResourceTest extends CategoryTest {
             .build();
     String accountIdentifier = UUIDGenerator.generateUuid();
     doNothing().when(accessControlClient).checkForAccessOrThrow(any(), any(), anyString());
-    when(globalKmsService.updateGlobalKms(dto.getConnector(), dto.getSecret()))
+    when(ngGlobalKmsService.updateGlobalKms(dto.getConnector(), dto.getSecret()))
         .thenReturn(ConnectorSecretResponseDTO.builder().build());
     ngGlobalKmsResource.update(dto, accountIdentifier);
     verify(accessControlClient, times(1)).checkForAccessOrThrow(any(), any(), eq(EDIT_CONNECTOR_PERMISSION));
     verify(accessControlClient, times(1)).checkForAccessOrThrow(any(), any(), eq(SECRET_EDIT_PERMISSION));
-    verify(globalKmsService, times(1)).updateGlobalKms(dto.getConnector(), dto.getSecret());
-    verify(globalKmsService).updateGlobalKms(connectorDTOArgumentCaptor.capture(), secretDTOV2ArgumentCaptor.capture());
+    verify(ngGlobalKmsService, times(1)).updateGlobalKms(dto.getConnector(), dto.getSecret());
+    verify(ngGlobalKmsService)
+        .updateGlobalKms(connectorDTOArgumentCaptor.capture(), secretDTOV2ArgumentCaptor.capture());
     assertEquals(dto.getConnector(), connectorDTOArgumentCaptor.getValue());
     assertEquals(dto.getSecret(), secretDTOV2ArgumentCaptor.getValue());
   }

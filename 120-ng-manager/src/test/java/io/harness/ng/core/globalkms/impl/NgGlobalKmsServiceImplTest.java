@@ -72,13 +72,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(GlobalKmsServiceImpl.class)
-public class GlobalKmsServiceImplTest extends CategoryTest {
+@PrepareForTest(NgGlobalKmsServiceImpl.class)
+public class NgGlobalKmsServiceImplTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
   @Mock private SecretCrudService ngSecretService;
   @Mock private NgConnectorManagerClientService ngConnectorManagerClientService;
   @Mock private NGSecretManagerService ngSecretManagerService;
-  private GlobalKmsServiceImpl globalKmsService;
+  private NgGlobalKmsServiceImpl globalKmsService;
   @Captor ArgumentCaptor<String> accountIdentifierArgumentCaptor;
   @Captor ArgumentCaptor<String> orgIdentifierArgumentCaptor;
   @Captor ArgumentCaptor<String> projectIdentifierArgumentCaptor;
@@ -102,7 +102,7 @@ public class GlobalKmsServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    globalKmsService = PowerMockito.spy(new GlobalKmsServiceImpl(
+    globalKmsService = PowerMockito.spy(new NgGlobalKmsServiceImpl(
         connectorService, ngSecretService, ngConnectorManagerClientService, ngSecretManagerService));
     userPrincipal = new UserPrincipal(userId, randomAlphabetic(10), userId, accountId);
   }

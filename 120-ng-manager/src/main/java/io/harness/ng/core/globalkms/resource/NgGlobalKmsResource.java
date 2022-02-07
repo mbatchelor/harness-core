@@ -27,7 +27,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.globalkms.dto.ConnectorSecretRequestDTO;
 import io.harness.ng.core.globalkms.dto.ConnectorSecretResponseDTO;
-import io.harness.ng.core.globalkms.services.GlobalKmsService;
+import io.harness.ng.core.globalkms.services.NgGlobalKmsService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -69,12 +69,12 @@ import org.hibernate.validator.constraints.NotBlank;
     content = { @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class)) })
 @Hidden
 public class NgGlobalKmsResource {
-  private final GlobalKmsService globalKmsService;
+  private final NgGlobalKmsService ngGlobalKmsService;
   private final AccessControlClient accessControlClient;
 
   @Inject
-  public NgGlobalKmsResource(GlobalKmsService globalKmsService, AccessControlClient accessControlClient) {
-    this.globalKmsService = globalKmsService;
+  public NgGlobalKmsResource(NgGlobalKmsService ngGlobalKmsService, AccessControlClient accessControlClient) {
+    this.ngGlobalKmsService = ngGlobalKmsService;
     this.accessControlClient = accessControlClient;
   }
 
@@ -102,6 +102,6 @@ public class NgGlobalKmsResource {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountIdentifier, dto.getSecret().getOrgIdentifier(), dto.getSecret().getProjectIdentifier()),
         Resource.of(SECRET_RESOURCE_TYPE, dto.getSecret().getIdentifier()), SECRET_EDIT_PERMISSION);
-    return ResponseDTO.newResponse(globalKmsService.updateGlobalKms(dto.getConnector(), dto.getSecret()));
+    return ResponseDTO.newResponse(ngGlobalKmsService.updateGlobalKms(dto.getConnector(), dto.getSecret()));
   }
 }

@@ -29,8 +29,8 @@ import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.globalkms.dto.ConnectorSecretResponseDTO;
-import io.harness.ng.core.globalkms.services.GlobalKmsService;
 import io.harness.ng.core.globalkms.services.NgConnectorManagerClientService;
+import io.harness.ng.core.globalkms.services.NgGlobalKmsService;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
 
@@ -39,14 +39,14 @@ import com.google.inject.name.Named;
 import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 
-public class GlobalKmsServiceImpl implements GlobalKmsService {
+public class NgGlobalKmsServiceImpl implements NgGlobalKmsService {
   private final ConnectorService connectorService;
   private final SecretCrudService ngSecretService;
   private final NgConnectorManagerClientService ngConnectorManagerClientService;
   private final NGSecretManagerService ngSecretManagerService;
 
   @Inject
-  public GlobalKmsServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService,
+  public NgGlobalKmsServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService,
       SecretCrudService ngSecretService, NgConnectorManagerClientService ngConnectorManagerClientService,
       NGSecretManagerService ngSecretManagerService) {
     this.connectorService = connectorService;
