@@ -291,7 +291,7 @@ public class TerraformPlanStepTest extends CategoryTest {
     doReturn("planName").when(terraformStepHelper).getTerraformPlanName(any(), any());
     doReturn(artifactoryStoreDelegateConfig)
         .when(terraformStepHelper)
-        .getFileFactoryFetchFilesConfig(any(), any(), any());
+        .getFileStoreFetchFilesConfig(any(), any(), any());
     doReturn(varFileInfo).when(terraformStepHelper).toTerraformVarFileInfo(any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
     doReturn("back-content").when(terraformStepHelper).getBackendConfig(any());

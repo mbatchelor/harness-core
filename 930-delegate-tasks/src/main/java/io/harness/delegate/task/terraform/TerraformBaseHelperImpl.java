@@ -475,9 +475,8 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
         .build();
   }
 
-  public Map<String, String> buildCommitIdToFetchedFilesMap(
-      String configFileIdentifier, GitBaseRequest gitBaseRequestForConfigFile) {
-    Map<String, String> commitIdForConfigFilesMap = new HashMap<>();
+  public Map<String, String> buildCommitIdToFetchedFilesMap(String configFileIdentifier,
+      GitBaseRequest gitBaseRequestForConfigFile, Map<String, String> commitIdForConfigFilesMap) {
     // Config File
     commitIdForConfigFilesMap.put(configFileIdentifier, getLatestCommitSHAFromLocalRepo(gitBaseRequestForConfigFile));
     return commitIdForConfigFilesMap;
@@ -485,9 +484,6 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
 
   public void addVarFilesCommitIdsToMap(
       String accountId, List<TerraformVarFileInfo> varFileInfo, Map<String, String> commitIdForConfigFilesMap) {
-    if (commitIdForConfigFilesMap == null) {
-      commitIdForConfigFilesMap = new HashMap<>();
-    }
     for (TerraformVarFileInfo varFile : varFileInfo) {
       if (varFile instanceof RemoteTerraformVarFileInfo
           && ((RemoteTerraformVarFileInfo) varFile).gitFetchFilesConfig != null) {

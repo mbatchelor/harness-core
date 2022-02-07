@@ -12,12 +12,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @OwnedBy(CDP)
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ArtifactoryFromYaml {
   @NotNull ArtifactFile artifactFile;
 }

@@ -25,6 +25,7 @@ import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.ArtifactoryStoreConfig;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
+import io.harness.cdng.manifest.yaml.FileStorageStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
@@ -54,6 +55,7 @@ import io.harness.delegate.task.filestore.FileStoreFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.InlineTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
+import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo.RemoteTerraformVarFileInfoBuilder;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
 import io.harness.exception.ExceptionUtils;
@@ -221,7 +223,7 @@ public class TerraformStepHelper {
         .build();
   }
 
-  public FileStoreFetchFilesConfig getFileFactoryFetchFilesConfig(
+  public FileStoreFetchFilesConfig getFileStoreFetchFilesConfig(
       StoreConfig store, Ambiance ambiance, String identifier) {
     if (store == null || !ManifestStoreType.ARTIFACTORY.equals(store.getKind())) {
       return null;
@@ -306,7 +308,7 @@ public class TerraformStepHelper {
             configuration.getConfigFiles().getStore().getSpec(), commitIdMap.get(TF_CONFIG_FILES)));
         break;
       case ARTIFACTORY:
-        builder.fileStoreConfig(configuration.getConfigFiles().getStore().getSpec());
+        builder.fileStoreConfig((FileStorageStoreConfig) configuration.getConfigFiles().getStore().getSpec());
         break;
       default:
         throw new InvalidRequestException(format("Unsupported store type: [%s]", storeConfigType));
@@ -403,8 +405,11 @@ public class TerraformStepHelper {
             .entityId(
                 generateFullIdentifier(getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
-            .configFiles(inheritOutput.getConfigFiles().toGitStoreConfigDTO())
-            .fileStoreConfig(inheritOutput.getFileStoreConfig())
+            .configFiles(
+                inheritOutput.getConfigFiles() != null ? inheritOutput.getConfigFiles().toGitStoreConfigDTO() : null)
+            .fileStoreConfig(inheritOutput.getFileStoreConfig() != null
+                    ? inheritOutput.getFileStoreConfig().toFileStorageConfigDTO()
+                    : null)
             .varFileConfigs(inheritOutput.getVarFileConfigs())
             .backendConfig(inheritOutput.getBackendConfig())
             .environmentVariables(inheritOutput.getEnvironmentVariables())
@@ -481,7 +486,7 @@ public class TerraformStepHelper {
                 .toGitStoreConfigDTO());
         break;
       case ARTIFACTORY:
-        builder.fileStoreConfig(store.getSpec());
+        builder.fileStoreConfig(((FileStorageStoreConfig) store.getSpec()).toFileStorageConfigDTO());
         break;
       default:
         throw new InvalidRequestException(format("Unsupported store type: [%s]", storeConfigType));
@@ -605,7 +610,7 @@ public class TerraformStepHelper {
                   getGitFetchFilesConfig(storeConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
               // And retrive the files from the Files stores
               FileStoreFetchFilesConfig fileFetchFilesConfig =
-                  getFileFactoryFetchFilesConfig(storeConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
+                  getFileStoreFetchFilesConfig(storeConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
               varFileInfo.add(RemoteTerraformVarFileInfo.builder()
                                   .gitFetchFilesConfig(gitFetchFilesConfig)
                                   .filestoreFetchFilesConfig(fileFetchFilesConfig)
@@ -639,16 +644,16 @@ public class TerraformStepHelper {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();
               if (storeConfig.getKind().equals(ManifestStoreType.ARTIFACTORY)) {
-                varFileConfigs.add(TerraformRemoteVarFileConfig.builder().fileStoreConfig(storeConfig).build());
+                varFileConfigs.add(
+                    TerraformRemoteVarFileConfig.builder()
+                        .fileStoreConfigDTO(((FileStorageStoreConfig) storeConfig).toFileStorageConfigDTO())
+                        .build());
               } else {
                 GitStoreConfigDTO gitStoreConfigDTO = getStoreConfigAtCommitId(
                     storeConfig, response.getCommitIdForConfigFilesMap().get(format(TF_VAR_FILES, i)))
                                                           .toGitStoreConfigDTO();
 
-                varFileConfigs.add(TerraformRemoteVarFileConfig.builder()
-                                       .gitStoreConfigDTO(gitStoreConfigDTO)
-                                       .fileStoreConfig(storeConfig)
-                                       .build());
+                varFileConfigs.add(TerraformRemoteVarFileConfig.builder().gitStoreConfigDTO(gitStoreConfigDTO).build());
               }
             }
           }
@@ -671,17 +676,20 @@ public class TerraformStepHelper {
                               .build());
         } else if (fileConfig instanceof TerraformRemoteVarFileConfig) {
           i++;
-          GitStoreConfig gitStoreConfig =
-              ((TerraformRemoteVarFileConfig) fileConfig).getGitStoreConfigDTO().toGitStoreConfig();
-          GitFetchFilesConfig gitFetchFilesConfig =
-              getGitFetchFilesConfig(gitStoreConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
-          StoreConfig fileStoreConfig = ((TerraformRemoteVarFileConfig) fileConfig).getFileStoreConfig();
-          FileStoreFetchFilesConfig fileStoreFetchFilesConfig =
-              getFileFactoryFetchFilesConfig(fileStoreConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
-          varFileInfo.add(RemoteTerraformVarFileInfo.builder()
-                              .gitFetchFilesConfig(gitFetchFilesConfig)
-                              .filestoreFetchFilesConfig(fileStoreFetchFilesConfig)
-                              .build());
+          RemoteTerraformVarFileInfoBuilder remoteTerraformVarFileInfoBuilder = RemoteTerraformVarFileInfo.builder();
+          TerraformRemoteVarFileConfig terraformRemoteVarFileConfig = (TerraformRemoteVarFileConfig) fileConfig;
+          if (terraformRemoteVarFileConfig.getGitStoreConfigDTO() != null) {
+            GitStoreConfig gitStoreConfig =
+                ((TerraformRemoteVarFileConfig) fileConfig).getGitStoreConfigDTO().toGitStoreConfig();
+            remoteTerraformVarFileInfoBuilder.gitFetchFilesConfig(
+                getGitFetchFilesConfig(gitStoreConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i)));
+          }
+          if (terraformRemoteVarFileConfig.getFileStoreConfigDTO() != null) {
+            remoteTerraformVarFileInfoBuilder.filestoreFetchFilesConfig(getFileStoreFetchFilesConfig(
+                terraformRemoteVarFileConfig.getFileStoreConfigDTO().toFileStorageStoreConfig(), ambiance,
+                format(TerraformStepHelper.TF_VAR_FILES, i)));
+          }
+          varFileInfo.add(remoteTerraformVarFileInfoBuilder.build());
         }
       }
       return varFileInfo;

@@ -14,6 +14,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.common.ParameterFieldHelper;
+import io.harness.delegate.beans.artifactory.ArtifactoryFile;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
@@ -27,6 +29,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -41,8 +44,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.ARTIFACTORY)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("artifactoryStore")
-@RecasterAlias("io.harness.cdng.manifest.yaml.ArtifactoryStore")
-public class ArtifactoryStoreConfig implements StoreConfig, Visitable, WithConnectorRef {
+@RecasterAlias("io.harness.cdng.manifest.yaml.ArtifactoryStoreConfig")
+public class ArtifactoryStoreConfig implements FileStorageStoreConfig, Visitable, WithConnectorRef {
   @NotNull
   @Wither
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
@@ -94,5 +97,22 @@ public class ArtifactoryStoreConfig implements StoreConfig, Visitable, WithConne
       resultantArtifactoryStore = resultantArtifactoryStore.withArtifacts(artifactoryStoreConfig.getArtifacts());
     }
     return resultantArtifactoryStore;
+  }
+
+  @Override
+  public FileStorageConfigDTO toFileStorageConfigDTO() {
+    return ArtifactoryStorageConfigDTO.builder()
+        .connectorRef(ParameterFieldHelper.getParameterFieldValue(connectorRef))
+        .repositoryName(ParameterFieldHelper.getParameterFieldValue(repositoryName))
+        .artifacts(artifacts.stream()
+                       .map(artifactoryFromYaml
+                           -> ArtifactoryFile.builder()
+                                  .name(ParameterFieldHelper.getParameterFieldValue(
+                                      artifactoryFromYaml.getArtifactFile().getName()))
+                                  .path(ParameterFieldHelper.getParameterFieldValue(
+                                      artifactoryFromYaml.getArtifactFile().getPath()))
+                                  .build())
+                       .collect(Collectors.toList()))
+        .build();
   }
 }

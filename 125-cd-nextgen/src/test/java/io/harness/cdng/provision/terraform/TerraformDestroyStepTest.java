@@ -28,11 +28,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
-import io.harness.cdng.manifest.yaml.ArtifactoryStoreConfig;
+import io.harness.cdng.manifest.yaml.ArtifactoryStorageConfigDTO;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStoreDTO;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.artifactory.ArtifactoryFile;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -241,7 +242,7 @@ public class TerraformDestroyStepTest extends CategoryTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     doReturn("test-account/test-org/test-project/Id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn(null).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
-    doReturn(fileStoreFetchFilesConfig).when(terraformStepHelper).getFileFactoryFetchFilesConfig(any(), any(), any());
+    doReturn(fileStoreFetchFilesConfig).when(terraformStepHelper).getFileStoreFetchFilesConfig(any(), any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
     mockStatic(StepUtils.class);
     PowerMockito.when(StepUtils.prepareCDTaskRequest(any(), any(), any(), any(), any(), any(), any()))
@@ -331,7 +332,7 @@ public class TerraformDestroyStepTest extends CategoryTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     doReturn("test-account/test-org/test-project/Id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn(null).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
-    doReturn(fileStoreFetchFilesConfig).when(terraformStepHelper).getFileFactoryFetchFilesConfig(any(), any(), any());
+    doReturn(fileStoreFetchFilesConfig).when(terraformStepHelper).getFileStoreFetchFilesConfig(any(), any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
 
     mockStatic(StepUtils.class);
@@ -426,19 +427,23 @@ public class TerraformDestroyStepTest extends CategoryTest {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     doReturn("test-account/test-org/test-project/Id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn(null).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
-    doReturn(fileStoreFetchFilesConfig).when(terraformStepHelper).getFileFactoryFetchFilesConfig(any(), any(), any());
+    doReturn(fileStoreFetchFilesConfig).when(terraformStepHelper).getFileStoreFetchFilesConfig(any(), any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
 
     mockStatic(StepUtils.class);
     PowerMockito.when(StepUtils.prepareCDTaskRequest(any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(TaskRequest.newBuilder().build());
     ArgumentCaptor<TaskData> taskDataArgumentCaptor = ArgumentCaptor.forClass(TaskData.class);
-    TerraformConfig terraformConfig = TerraformConfig.builder()
-                                          .backendConfig("back-content")
-                                          .workspace("w1")
-                                          .configFiles(null)
-                                          .fileStoreConfig(ArtifactoryStoreConfig.builder().build())
-                                          .build();
+    TerraformConfig terraformConfig =
+        TerraformConfig.builder()
+            .backendConfig("back-content")
+            .workspace("w1")
+            .configFiles(null)
+            .fileStoreConfig(ArtifactoryStorageConfigDTO.builder()
+                                 .artifacts(Collections.singletonList(
+                                     ArtifactoryFile.builder().path("artifactPath").name("artifactName").build()))
+                                 .build())
+            .build();
 
     doReturn(terraformConfig).when(terraformStepHelper).getLastSuccessfulApplyConfig(any(), any());
     TaskRequest taskRequest =

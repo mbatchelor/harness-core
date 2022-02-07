@@ -11,8 +11,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.manifest.yaml.FileStorageConfigDTO;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
-import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -63,7 +63,7 @@ public class TerraformConfig implements PersistentEntity, CreatedAtAware {
   @NotNull long createdAt;
 
   GitStoreConfigDTO configFiles;
-  StoreConfig fileStoreConfig;
+  FileStorageConfigDTO fileStoreConfig;
   List<TerraformVarFileConfig> varFileConfigs;
   String backendConfig;
   Map<String, String> environmentVariables;

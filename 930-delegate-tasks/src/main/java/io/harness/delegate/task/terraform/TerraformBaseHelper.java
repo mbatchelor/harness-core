@@ -50,8 +50,8 @@ public interface TerraformBaseHelper {
   GitBaseRequest getGitBaseRequestForConfigFile(
       String accountId, GitStoreDelegateConfig confileFileGitStore, GitConfigDTO configFileGitConfigDTO);
 
-  Map<String, String> buildCommitIdToFetchedFilesMap(
-      String configFileIdentifier, GitBaseRequest gitBaseRequestForConfigFile);
+  Map<String, String> buildCommitIdToFetchedFilesMap(String configFileIdentifier,
+      GitBaseRequest gitBaseRequestForConfigFile, Map<String, String> commitIdForConfigFilesMap);
 
   void addVarFilesCommitIdsToMap(
       String accountId, List<TerraformVarFileInfo> varFileInfo, Map<String, String> commitIdForConfigFilesMap);

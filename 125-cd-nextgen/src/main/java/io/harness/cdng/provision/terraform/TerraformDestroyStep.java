@@ -144,7 +144,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
         .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .configFile(helper.getGitFetchFilesConfig(
             spec.getConfigFiles().getStore().getSpec(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .fileStoreConfigFiles(helper.getFileFactoryFetchFilesConfig(
+        .fileStoreConfigFiles(helper.getFileStoreFetchFilesConfig(
             spec.getConfigFiles().getStore().getSpec(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
@@ -183,7 +183,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
-        .fileStoreConfigFiles(helper.getFileFactoryFetchFilesConfig(
+        .fileStoreConfigFiles(helper.getFileStoreFetchFilesConfig(
             inheritOutput.getFileStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .varFileInfos(helper.prepareTerraformVarFileInfo(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
@@ -222,8 +222,6 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     builder.currentStateFileId(helper.getLatestFileId(entityId));
     TerraformConfig terraformConfig = helper.getLastSuccessfulApplyConfig(parameters, ambiance);
     builder.workspace(terraformConfig.getWorkspace())
-        .fileStoreConfigFiles(helper.getFileFactoryFetchFilesConfig(
-            terraformConfig.getFileStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))
         .varFileInfos(helper.prepareTerraformVarFileInfo(terraformConfig.getVarFileConfigs(), ambiance))
         .backendConfig(terraformConfig.getBackendConfig())
         .targets(terraformConfig.getTargets())
@@ -234,6 +232,11 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     if (terraformConfig.getConfigFiles() != null) {
       builder.configFile(helper.getGitFetchFilesConfig(
           terraformConfig.getConfigFiles().toGitStoreConfig(), ambiance, TerraformStepHelper.TF_CONFIG_FILES));
+    }
+    if (terraformConfig.getFileStoreConfig() != null) {
+      builder.fileStoreConfigFiles(
+          helper.getFileStoreFetchFilesConfig(terraformConfig.getFileStoreConfig().toFileStorageStoreConfig(), ambiance,
+              TerraformStepHelper.TF_CONFIG_FILES));
     }
 
     TaskData taskData =

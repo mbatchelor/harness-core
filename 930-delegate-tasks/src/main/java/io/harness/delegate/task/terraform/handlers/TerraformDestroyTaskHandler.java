@@ -41,6 +41,7 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -58,7 +59,7 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
       throws TerraformCommandExecutionException, IOException, TimeoutException, InterruptedException {
     String scriptDirectory;
     String baseDir = terraformBaseHelper.getBaseDir(taskParameters.getEntityId());
-    Map<String, String> commitIdToFetchedFilesMap = null;
+    Map<String, String> commitIdToFetchedFilesMap = new HashMap<>();
 
     if (taskParameters.getConfigFile() != null) {
       GitStoreDelegateConfig conFileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
@@ -85,7 +86,7 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
           conFileFileGitStore, logCallback, scriptPath, baseDir);
 
       commitIdToFetchedFilesMap = terraformBaseHelper.buildCommitIdToFetchedFilesMap(
-          taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile);
+          taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile, commitIdToFetchedFilesMap);
     } else if (taskParameters.getFileStoreConfigFiles() != null
         && taskParameters.getFileStoreConfigFiles().getType() == ARTIFACTORY) {
       ArtifactoryStoreDelegateConfig artifactoryStoreDelegateConfig =

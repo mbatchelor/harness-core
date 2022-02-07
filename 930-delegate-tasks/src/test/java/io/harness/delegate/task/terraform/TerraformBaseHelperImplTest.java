@@ -271,7 +271,7 @@ public class TerraformBaseHelperImplTest extends CategoryTest {
     doReturn("commitsha").when(spyTerraformBaseHelper).getLatestCommitSHAFromLocalRepo(any(GitBaseRequest.class));
 
     Map<String, String> resultMap =
-        terraformBaseHelper.buildCommitIdToFetchedFilesMap("configFileIdentifier", mockGitBaseRequest);
+        terraformBaseHelper.buildCommitIdToFetchedFilesMap("configFileIdentifier", mockGitBaseRequest, new HashMap<>());
     assertThat(resultMap).isNotNull();
     assertThat(resultMap.size()).isEqualTo(1);
   }

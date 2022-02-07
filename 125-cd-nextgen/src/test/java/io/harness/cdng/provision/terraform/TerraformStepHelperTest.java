@@ -34,6 +34,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.cdng.k8s.K8sStepHelper;
+import io.harness.cdng.manifest.yaml.ArtifactoryStorageConfigDTO;
 import io.harness.cdng.manifest.yaml.ArtifactoryStoreConfig;
 import io.harness.cdng.manifest.yaml.BitBucketStoreDTO;
 import io.harness.cdng.manifest.yaml.GitLabStoreDTO;
@@ -212,7 +213,7 @@ public class TerraformStepHelperTest extends CategoryTest {
     assertThat(varFileConfigs.get(1) instanceof TerraformInlineVarFileConfig).isTrue();
     assertThat(((TerraformInlineVarFileConfig) varFileConfigs.get(1)).getVarFileContent()).isEqualTo("var-content");
     assertThat(varFileConfigs.get(0) instanceof TerraformRemoteVarFileConfig).isTrue();
-    assertThat(((TerraformRemoteVarFileConfig) varFileConfigs.get(0)).getFileStoreConfig().getKind())
+    assertThat(((TerraformRemoteVarFileConfig) varFileConfigs.get(0)).getFileStoreConfigDTO().getKind())
         .isEqualTo("Artifactory");
     assertThat(output.getBackendConfig()).isEqualTo("back-content");
     assertThat(output.getEnvironmentVariables()).isNotNull();
@@ -840,7 +841,7 @@ public class TerraformStepHelperTest extends CategoryTest {
     Ambiance ambiance = getAmbiance();
     ArgumentCaptor<TerraformConfig> captor = ArgumentCaptor.forClass(TerraformConfig.class);
     GitStoreConfigDTO configFiles = GithubStoreDTO.builder().branch("master").connectorRef("terraform").build();
-    ArtifactoryStoreConfig artifactoryStoreConfig = ArtifactoryStoreConfig.builder().build();
+    ArtifactoryStorageConfigDTO artifactoryStoreConfig = ArtifactoryStorageConfigDTO.builder().build();
     TerraformConfig terraformConfig = TerraformConfig.builder()
                                           .backendConfig("back-content")
                                           .workspace("w1")

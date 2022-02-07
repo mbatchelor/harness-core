@@ -259,7 +259,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn("test-account/test-org/test-project/Id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn(artifactoryStoreDelegateConfig)
         .when(terraformStepHelper)
-        .getFileFactoryFetchFilesConfig(any(), any(), any());
+        .getFileStoreFetchFilesConfig(any(), any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
     mockStatic(StepUtils.class);
     PowerMockito.when(StepUtils.prepareCDTaskRequest(any(), any(), any(), any(), any(), any(), any()))
@@ -380,7 +380,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn("test-account/test-org/test-project/Id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn(artifactoryStoreDelegateConfig)
         .when(terraformStepHelper)
-        .getFileFactoryFetchFilesConfig(any(), any(), any());
+        .getFileStoreFetchFilesConfig(any(), any(), any());
     doReturn(EnvironmentType.NON_PROD).when(stepHelper).getEnvironmentType(any());
 
     mockStatic(StepUtils.class);
@@ -542,7 +542,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn("test-account/test-org/test-project/Id").when(terraformStepHelper).generateFullIdentifier(any(), any());
     doReturn(artifactoryStoreDelegateConfig)
         .when(terraformStepHelper)
-        .getFileFactoryFetchFilesConfig(any(), any(), any());
+        .getFileStoreFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
     doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
