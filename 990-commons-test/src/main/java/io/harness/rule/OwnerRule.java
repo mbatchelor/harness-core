@@ -395,7 +395,7 @@ public class OwnerRule implements TestRule {
           .put(PAVIC, defaultUserInfo(PAVIC).slack("U02GPSRJB40").team(CV).build())
           .put(SHIVAM, defaultUserInfo(SHIVAM).slack("U01CPMYC37T").team(CDC).build())
           .put(NGONZALEZ, defaultUserInfo(NGONZALEZ).slack("U02LFG1UFGF").team(CIT).build())
-          .put(ROJ, defaultUserInfo(ROJ).slack("U02P80HJ59R").team(CIT).build())
+          .put(ROGER, defaultUserInfo(ROGER).slack("U02P80HJ59R").team(CIT).build())
           .put(VITALIE, defaultUserInfo(VITALIE).slack("U02U09LU91R").team(CDP).build())
           .build();
 

@@ -11,7 +11,7 @@ import static io.harness.cdng.provision.terraform.TerraformStepConfigurationType
 import static io.harness.cdng.provision.terraform.TerraformStepConfigurationType.INHERIT_FROM_PLAN;
 import static io.harness.cdng.provision.terraform.TerraformStepConfigurationType.INLINE;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
-import static io.harness.rule.OwnerRule.ROJ;
+import static io.harness.rule.OwnerRule.ROGER;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -138,7 +138,7 @@ public class TerraformDestroyStepTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ROJ)
+  @Owner(developers = ROGER)
   @Category(UnitTests.class)
   public void testValidateResourcesWithArtifactory() {
     Ambiance ambiance = getAmbiance();
