@@ -12,14 +12,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.pms.resume.EngineResumeCallback;
 import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.plan.Node;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -28,7 +26,6 @@ import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
-import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -47,41 +44,31 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;
-  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
+    Ambiance ambiance = event.getAmbiance();
     SpawnChildRequest request = event.getSpawnChildRequest();
 
-    NodeExecution childNodeExecution =
-        buildChildNodeExecution(SdkResponseEventUtils.getNodeExecutionId(event), request);
-
-    log.info("For Child Executable starting Child NodeExecution with id: {}", childNodeExecution.getUuid());
+    String childInstanceId = triggerChildNode(ambiance, request);
 
     // Attach a Callback to the parent for the child
-    EngineResumeCallback callback = EngineResumeCallback.builder().ambiance(event.getAmbiance()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, childNodeExecution.getUuid());
+    EngineResumeCallback callback = EngineResumeCallback.builder().ambiance(ambiance).build();
+    waitNotifyEngine.waitForAllOn(publisherName, callback, childInstanceId);
 
     // Update the parent with executable response
     nodeExecutionService.updateV2(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, buildExecutableResponse(request)));
-
-    executorService.submit(ExecutionEngineDispatcher.builder()
-                               .ambiance(childNodeExecution.getAmbiance())
-                               .orchestrationEngine(engine)
-                               .build());
   }
 
-  private NodeExecution buildChildNodeExecution(String nodeExecutionId, SpawnChildRequest spawnChildRequest) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-
-    String childNodeId = extractChildNodeId(spawnChildRequest);
-    Node node = planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), childNodeId);
-
+  private String triggerChildNode(Ambiance ambiance, SpawnChildRequest request) {
     String childInstanceId = generateUuid();
-    Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(
-        nodeExecution.getAmbiance(), PmsLevelUtils.buildLevelFromNode(childInstanceId, node));
-    return engine.triggerNode(clonedAmbiance, node, null);
+    log.info("For Child Executable starting Child NodeExecution with id: {}", childInstanceId);
+    Node node = planService.fetchNode(ambiance.getPlanId(), extractChildNodeId(request));
+    Ambiance clonedAmbiance =
+        AmbianceUtils.cloneForChild(ambiance, PmsLevelUtils.buildLevelFromNode(childInstanceId, node));
+    executorService.submit(() -> engine.triggerNode(clonedAmbiance, node, null));
+    return childInstanceId;
   }
 
   private String extractChildNodeId(SpawnChildRequest spawnChildRequest) {
