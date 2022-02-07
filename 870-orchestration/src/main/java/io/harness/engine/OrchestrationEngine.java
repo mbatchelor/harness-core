@@ -41,12 +41,14 @@ import lombok.extern.slf4j.Slf4j;
 public class OrchestrationEngine {
   @Inject private NodeExecutionStrategyFactory strategyFactory;
 
-  public <T extends PmsNodeExecution> T triggerNode(@NonNull Ambiance ambiance, @NonNull Node node, PmsNodeExecutionMetadata metadata) {
+  public <T extends PmsNodeExecution> T triggerNode(
+      @NonNull Ambiance ambiance, @NonNull Node node, PmsNodeExecutionMetadata metadata) {
     NodeExecutionStrategy strategy = strategyFactory.obtainStrategy(node.getNodeType());
     return (T) strategy.triggerNode(ambiance, node, metadata);
   }
 
-  public <T extends PmsNodeExecution> T triggerNextNode(@NonNull Ambiance ambiance, @NonNull Node node, T previousExecution, PmsNodeExecutionMetadata metadata) {
+  public <T extends PmsNodeExecution> T triggerNextNode(
+      @NonNull Ambiance ambiance, @NonNull Node node, T previousExecution, PmsNodeExecutionMetadata metadata) {
     NodeExecutionStrategy strategy = strategyFactory.obtainStrategy(node.getNodeType());
     return (T) strategy.triggerNextNode(ambiance, node, previousExecution, metadata);
   }
@@ -92,9 +94,9 @@ public class OrchestrationEngine {
     strategy.endNodeExecution(ambiance);
   }
 
-  public void handleSdkREsponseEvent(SdkResponseEventProto event) {
-    NodeExecutionStrategy strategy = strategyFactory.obtainStrategy(OrchestrationUtils.currentNodeType(event.getAmbiance()));
+  public void handleSdkResponseEvent(SdkResponseEventProto event) {
+    NodeExecutionStrategy strategy =
+        strategyFactory.obtainStrategy(OrchestrationUtils.currentNodeType(event.getAmbiance()));
     strategy.handleSdkResponseEvent(event);
-
   }
 }

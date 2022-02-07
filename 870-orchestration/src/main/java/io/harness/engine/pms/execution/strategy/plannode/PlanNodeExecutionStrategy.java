@@ -118,7 +118,8 @@ public class PlanNodeExecutionStrategy
   @Override
   public NodeExecution triggerNode(@NotNull Ambiance ambiance, @NotNull PlanNode node, NodeExecutionMetadata metadata) {
     String parentId = AmbianceUtils.obtainParentRuntimeId(ambiance);
-    NodeExecution saved = createNodeExecution(ambiance, node, null, parentId, null);
+    String notifyId = parentId == null ? null : AmbianceUtils.obtainCurrentRuntimeId(ambiance);
+    NodeExecution saved = createNodeExecution(ambiance, node, notifyId, parentId, null);
     // TODO: Should add to an execution queue rather than submitting straight to thread pool
     executorService.submit(() -> startExecution(saved.getAmbiance()));
     return saved;
@@ -151,7 +152,8 @@ public class PlanNodeExecutionStrategy
       log.info("Starting to Resolve step parameters and Inputs");
       Object resolvedStepParameters =
           pmsEngineExpressionService.resolve(ambiance, node.getStepParameters(), skipUnresolvedExpressionsCheck);
-      PmsStepParameters pmsStepParameters = PmsStepParameters.parse(OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepParameters));
+      PmsStepParameters pmsStepParameters = PmsStepParameters.parse(
+          OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepParameters));
       savedNodeExecution = nodeExecutionService.update(savedNodeExecution.withResolvedParams(pmsStepParameters));
       Object resolvedStepInputs =
           pmsEngineExpressionService.resolve(ambiance, node.getStepInputs(), skipUnresolvedExpressionsCheck);

@@ -11,16 +11,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.event.handlers.SdkResponseProcessor;
-import io.harness.execution.NodeExecution;
-import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.events.base.PmsBaseEventHandler;
-import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
-import io.harness.registries.SdkResponseProcessorFactory;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -58,6 +52,6 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
   @Override
   protected void handleEventWithContext(SdkResponseEventProto event) {
     // This is the event for new execution
-      engine.handleSdkREsponseEvent(event);
+    engine.handleSdkResponseEvent(event);
   }
 }

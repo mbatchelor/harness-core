@@ -21,16 +21,16 @@ import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 
 import com.google.protobuf.ByteString;
-import lombok.NonNull;
-
 import java.util.EnumSet;
 import java.util.Map;
+import lombok.NonNull;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface NodeExecutionStrategy<T extends Node, N extends PmsNodeExecution, M extends PmsNodeExecutionMetadata> {
   N triggerNode(@NonNull Ambiance ambiance, @NonNull T node, M metadata);
 
-  default N triggerNextNode(@NonNull Ambiance ambiance, @NonNull T node, N prevExecution, PmsNodeExecutionMetadata metadata){
+  default N triggerNextNode(
+      @NonNull Ambiance ambiance, @NonNull T node, N prevExecution, PmsNodeExecutionMetadata metadata) {
     throw new UnsupportedOperationException("Trigger Next Node Node not psuppoerted for plan");
   };
 
@@ -69,8 +69,7 @@ public interface NodeExecutionStrategy<T extends Node, N extends PmsNodeExecutio
 
   void handleError(Ambiance ambiance, Exception exception);
 
-  default void handleSdkResponseEvent(SdkResponseEventProto event){
+  default void handleSdkResponseEvent(SdkResponseEventProto event) {
     throw new UnsupportedOperationException("Start execution node Supported for plan");
   };
-
 }

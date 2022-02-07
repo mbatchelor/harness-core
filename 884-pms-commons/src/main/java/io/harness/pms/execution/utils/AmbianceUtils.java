@@ -189,7 +189,7 @@ public class AmbianceUtils {
   }
 
   public static String obtainParentRuntimeId(Ambiance ambiance) {
-    if (ambiance.getLevelsCount() < 2){
+    if (ambiance.getLevelsCount() < 2) {
       return null;
     }
     return ambiance.getLevels(ambiance.getLevelsCount() - 2).getRuntimeId();
