@@ -30,6 +30,8 @@ import io.harness.serializer.JsonUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.mongodb.lang.Nullable;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -48,6 +50,8 @@ public class DynatraceServiceImplTest extends CategoryTest {
   private static final String SERVICE_METHOD_ID = "SERVICE_METHOD_ID";
 
   @Mock private OnboardingService mockedOnboardingService;
+  @Mock private Clock mockedClock;
+
   @InjectMocks private DynatraceService classUnderTest = new DynatraceServiceImpl();
   private ProjectParams mockedProjectParams;
   private String connectorIdentifier;
@@ -72,6 +76,7 @@ public class DynatraceServiceImplTest extends CategoryTest {
                               .build();
     connectorIdentifier = generateUuid();
     MockitoAnnotations.initMocks(this);
+    when(mockedClock.instant()).thenReturn(Instant.now());
   }
 
   @Test
