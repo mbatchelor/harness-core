@@ -34,7 +34,7 @@ public class MigratorUtility {
 
   // This is for sorting entities while creating
   private static int toInt(NGYamlFile file) {
-    switch ((file.getType())) {
+    switch (file.getType()) {
       case SECRET_MANAGER:
         return 1;
       case SECRET:
