@@ -9,6 +9,7 @@ package io.harness.metrics;
 
 import static io.harness.telemetry.Destination.AMPLITUDE;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.harness.account.AccountClient;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.dto.AccountDTO;
@@ -86,7 +87,8 @@ public class PipelineTelemetryPublisher {
     }
   }
 
-  private String getAccountId() {
+  @VisibleForTesting
+  String getAccountId() {
     List<AccountDTO> accountDTOList = RestClientUtils.getResponse(accountClient.getAllAccounts());
     String accountId = accountDTOList.get(0).getIdentifier();
     if (accountDTOList.size() > 1 && accountId.equals(GLOBAL_ACCOUNT_ID)) {
