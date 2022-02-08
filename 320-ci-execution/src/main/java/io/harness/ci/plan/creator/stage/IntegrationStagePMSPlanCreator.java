@@ -16,17 +16,19 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.PROPERTIES;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.build.BuildStatusUpdateParameter;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
+import io.harness.beans.serializer.RunTimeInputHandler;
+import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CIIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.plan.creator.codebase.CodebasePlanCreator;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -86,10 +88,16 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     String childNodeId = executionField.getNode().getUuid();
     ExecutionSource executionSource = buildExecutionSource(ctx, stageElementConfig);
 
-    String codeBaseNodeUUID =
-        fetchCodeBaseNodeUUID(ctx, executionField.getNode().getUuid(), executionSource, planCreationResponseMap);
-    if (isNotEmpty(codeBaseNodeUUID)) {
-      childNodeId = codeBaseNodeUUID; // Change the child of integration stage to codebase node
+    IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
+    boolean cloneCodebase =
+        RunTimeInputHandler.resolveBooleanParameter(integrationStageConfig.getCloneCodebase(), false);
+
+    if (cloneCodebase) {
+      String codeBaseNodeUUID =
+          fetchCodeBaseNodeUUID(ctx, executionField.getNode().getUuid(), executionSource, planCreationResponseMap);
+      if (isNotEmpty(codeBaseNodeUUID)) {
+        childNodeId = codeBaseNodeUUID; // Change the child of integration stage to codebase node
+      }
     }
 
     ExecutionElementConfig modifiedExecutionPlan =

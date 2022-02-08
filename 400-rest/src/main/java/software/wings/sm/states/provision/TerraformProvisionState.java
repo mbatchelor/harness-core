@@ -80,7 +80,6 @@ import io.harness.delegate.task.terraform.TerraformCommandUnit;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
@@ -203,7 +202,6 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected TerraformPlanHelper terraformPlanHelper;
   @Inject protected transient MainConfiguration configuration;
   @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
-  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -241,7 +239,6 @@ public abstract class TerraformProvisionState extends State {
   }
 
   protected abstract TerraformCommandUnit commandUnit();
-
   protected abstract TerraformCommand command();
 
   @Override
@@ -333,7 +330,11 @@ public abstract class TerraformProvisionState extends State {
 
   private void saveTerraformPlanJson(
       TerraformExecutionData executionData, ExecutionContext context, TerraformCommand terraformCommand) {
-    if (featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId())) {
+    // We are checking for nulls in tfPlanJson field because it can be null even if feature flag is set to true.
+    // Customer sometimes enables that flag because the customer is using multiple terraform versions at the same time,
+    // some of which do not support exporting in json format
+    if (featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId())
+        && executionData.getTfPlanJson() != null) {
       String variableName = terraformCommand == TerraformCommand.APPLY ? TF_APPLY_VAR_NAME : TF_DESTROY_VAR_NAME;
       // if the plan variable exists overwrite it
       SweepingOutputInstance sweepingOutputInstance =
@@ -720,14 +721,6 @@ public abstract class TerraformProvisionState extends State {
         ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
         : null;
 
-    if (localEncryptorHelper.isLocalManagerConfig(secretManagerConfig)) {
-      if (element.getEncryptedTfPlan() == null) {
-        localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
-      } else {
-        localEncryptorHelper.populateConfigForDecryption(element.getEncryptedTfPlan(), secretManagerConfig);
-      }
-    }
-
     TfVarSource tfVarSource = element.getTfVarSource();
     if (tfVarSource != null && TfVarSourceType.GIT.equals(tfVarSource.getTfVarSourceType())) {
       setTfVarGitFileConfig(((TfVarGitSource) element.getTfVarSource()).getGitFileConfig());
@@ -846,11 +839,6 @@ public abstract class TerraformProvisionState extends State {
     SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
         ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
         : null;
-
-    if (localEncryptorHelper.isLocalManagerConfig(secretManagerConfig)) {
-      // encryptedTfPlan is NULL, thus task is for encryption
-      localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
-    }
 
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {

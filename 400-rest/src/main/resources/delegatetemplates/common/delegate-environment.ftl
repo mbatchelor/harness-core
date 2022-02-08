@@ -29,6 +29,8 @@
 <#macro immutable>
         - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
           value: "true"
+        - name: LOG_STREAMING_SERVICE_URL
+          value: "${logStreamingServiceBaseUrl}"
 </#macro>
 <#macro cgSpecific>
         - name: DELEGATE_PROFILE
@@ -91,8 +93,6 @@
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: VERSION_CHECK_DISABLED
-          value: "${versionCheckDisabled}"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

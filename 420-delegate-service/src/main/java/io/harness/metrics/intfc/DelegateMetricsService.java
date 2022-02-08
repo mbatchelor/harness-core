@@ -14,9 +14,11 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 public interface DelegateMetricsService {
   void recordDelegateTaskMetrics(DelegateTask task, String metricName);
 
-  void recordDelegateTaskMetrics(String accountId, String delegateId, String metricName);
+  void recordDelegateTaskMetrics(String accountId, String metricName);
 
   void recordDelegateTaskResponseMetrics(DelegateTask delegateTask, DelegateTaskResponse response, String metricName);
 
   void recordDelegateMetrics(Delegate delegate, String metricName);
+
+  void recordPerpetualTaskMetrics(String accountId, String perpetualTaskType, String metricName);
 }

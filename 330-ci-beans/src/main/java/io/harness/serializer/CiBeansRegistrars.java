@@ -8,9 +8,10 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.stages.IntegrationStageConfig;
+import io.harness.beans.stages.IntegrationStageNode;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.nodes.ArtifactoryUploadNode;
 import io.harness.beans.steps.nodes.BuildAndPushDockerNode;
@@ -26,9 +27,12 @@ import io.harness.beans.steps.nodes.S3UploadNode;
 import io.harness.beans.steps.nodes.SaveCacheGCSNode;
 import io.harness.beans.steps.nodes.SaveCacheS3Node;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.YamlMorphiaRegistrar;
+import io.harness.yaml.schema.beans.YamlGroup;
+import io.harness.yaml.schema.beans.YamlSchemaMetadata;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
@@ -40,7 +44,6 @@ import lombok.experimental.UtilityClass;
 public class CiBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(NGPipelineRegistrars.kryoRegistrars)
           .addAll(ProjectAndOrgRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
@@ -53,7 +56,6 @@ public class CiBeansRegistrars {
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
@@ -71,7 +73,11 @@ public class CiBeansRegistrars {
                    .availableAtProjectLevel(true)
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
-                   .clazz(IntegrationStageConfig.class)
+                   .clazz(IntegrationStageNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(ImmutableList.of(ModuleType.CI, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STAGE.name()).build())
+                                           .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.INTEGRATION_STEPS)
