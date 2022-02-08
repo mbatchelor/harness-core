@@ -12,6 +12,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.NodeDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanService;
@@ -67,7 +68,7 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
     Node node = planService.fetchNode(ambiance.getPlanId(), extractChildNodeId(request));
     Ambiance clonedAmbiance =
         AmbianceUtils.cloneForChild(ambiance, PmsLevelUtils.buildLevelFromNode(childInstanceId, node));
-    executorService.submit(() -> engine.triggerNode(clonedAmbiance, node, null));
+    executorService.submit(NodeDispatcher.builder().ambiance(clonedAmbiance).node(node).engine(engine).build());
     return childInstanceId;
   }
 

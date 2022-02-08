@@ -13,8 +13,8 @@ import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.stepDetail.NodeExecutionsInfo;
 import io.harness.engine.ExecutionCheck;
+import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanService;
@@ -38,6 +38,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMetadata;
 import io.harness.execution.PmsNodeExecutionMetadata;
+import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.logging.AutoLogContext;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -59,7 +60,6 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 import io.harness.registries.SdkResponseProcessorFactory;
-import io.harness.repositories.stepDetail.NodeExecutionsInfoRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -104,7 +104,7 @@ public class PlanNodeExecutionStrategy
   @Inject private SdkResponseProcessorFactory handlerFactory;
   @Inject private TransactionHelper transactionHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject NodeExecutionsInfoRepository nodeExecutionsInfoRepository;
+  @Inject private PmsGraphStepDetailsService pmsGraphStepDetailsService;
 
   @Override
   public NodeExecution triggerNextNode(@NonNull Ambiance ambiance, @NonNull PlanNode node,
@@ -112,7 +112,10 @@ public class PlanNodeExecutionStrategy
     NodeExecution saved = createNodeExecution(
         ambiance, node, prevExecution.getNotifyId(), prevExecution.getParentId(), prevExecution.getUuid());
     // TODO: Should add to an execution queue rather than submitting straight to thread pool
-    executorService.submit(() -> startExecution(saved.getAmbiance()));
+    executorService.submit(ExecutionEngineDispatcher.builder()
+                               .ambiance(saved.getAmbiance())
+                               .orchestrationEngine(orchestrationEngine)
+                               .build());
     return saved;
   }
 
@@ -122,11 +125,15 @@ public class PlanNodeExecutionStrategy
     String notifyId = parentId == null ? null : AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     NodeExecution saved = createNodeExecution(ambiance, node, notifyId, parentId, null);
     // TODO: Should add to an execution queue rather than submitting straight to thread pool
-    executorService.submit(() -> startExecution(saved.getAmbiance()));
+    executorService.submit(ExecutionEngineDispatcher.builder()
+                               .ambiance(saved.getAmbiance())
+                               .orchestrationEngine(orchestrationEngine)
+                               .build());
     return saved;
   }
 
-  private NodeExecution createNodeExecution(
+  @VisibleForTesting
+  NodeExecution createNodeExecution(
       @NotNull Ambiance ambiance, @NotNull PlanNode node, String notifyId, String parentId, String previousId) {
     final NodeExecution persistedNodeExecution = persistNodeExecution(ambiance, node, notifyId, parentId, previousId);
     if (persistedNodeExecution == null) {
@@ -139,15 +146,11 @@ public class PlanNodeExecutionStrategy
       PmsStepParameters resolvedParameters =
           resolveParameters(ambiance, node.getStepParameters(), skipUnresolvedExpressionsCheck);
       PmsStepParameters resolvedInputs =
-          resolveParameters(ambiance, node.getStepParameters(), skipUnresolvedExpressionsCheck);
+          resolveParameters(ambiance, node.getStepInputs(), skipUnresolvedExpressionsCheck);
       NodeExecution updatedNodeExecution =
           nodeExecutionService.update(persistedNodeExecution.withResolvedParams(resolvedParameters));
-      NodeExecutionsInfo nodeExecutionsInfo = NodeExecutionsInfo.builder()
-                                                  .nodeExecutionId(persistedNodeExecution.getUuid())
-                                                  .planExecutionId(ambiance.getPlanExecutionId())
-                                                  .resolvedInputs(resolvedInputs)
-                                                  .build();
-      nodeExecutionsInfoRepository.save(nodeExecutionsInfo);
+      pmsGraphStepDetailsService.addStepInputs(
+          persistedNodeExecution.getUuid(), ambiance.getPlanExecutionId(), resolvedInputs);
       return updatedNodeExecution;
     });
   }

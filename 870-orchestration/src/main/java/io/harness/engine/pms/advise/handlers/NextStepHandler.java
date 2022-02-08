@@ -9,6 +9,7 @@ package io.harness.engine.pms.advise.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.execution.NodeExecution.NodeExecutionKeys;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -41,9 +42,7 @@ public class NextStepHandler implements AdviserResponseHandler {
           planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), advise.getNextNodeId()));
       String runtimeId = generateUuid();
       NodeExecution prevExecution = nodeExecutionService.update(nodeExecution.getUuid(),
-          ops
-          -> ops.set(NodeExecution.NodeExecutionKeys.nextId, runtimeId)
-                 .set(NodeExecution.NodeExecutionKeys.endTs, System.currentTimeMillis()));
+          ops -> ops.set(NodeExecutionKeys.nextId, runtimeId).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
       Ambiance cloned = AmbianceUtils.cloneForFinish(
           nodeExecution.getAmbiance(), PmsLevelUtils.buildLevelFromNode(runtimeId, nextNode));
       engine.triggerNextNode(cloned, nextNode, prevExecution, null);
