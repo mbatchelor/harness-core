@@ -9,7 +9,6 @@ package io.harness.metrics;
 
 import static io.harness.telemetry.Destination.AMPLITUDE;
 
-import com.google.common.annotations.VisibleForTesting;
 import io.harness.account.AccountClient;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.dto.AccountDTO;
@@ -21,6 +20,7 @@ import io.harness.remote.client.RestClientUtils;
 import io.harness.telemetry.TelemetryOption;
 import io.harness.telemetry.TelemetryReporter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;

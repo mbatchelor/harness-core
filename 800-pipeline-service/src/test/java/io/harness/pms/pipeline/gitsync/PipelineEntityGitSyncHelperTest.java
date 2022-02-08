@@ -256,11 +256,4 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
     assertThat(marked).isTrue();
     verify(pipelineService, times(1)).markEntityInvalid(accountId, orgId, projectId, pipelineId, erroneousYaml);
   }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testListAllEntities() {
-
-  }
 }
