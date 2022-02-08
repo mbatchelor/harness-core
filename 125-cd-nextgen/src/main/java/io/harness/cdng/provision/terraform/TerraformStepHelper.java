@@ -249,7 +249,7 @@ public class TerraformStepHelper {
         .connectorDTO(connectorDTO)
         .encryptedDataDetails(encryptedDataDetails)
         .succeedIfFileNotFound(false)
-        .artifacts(artifactoryStoreConfig.getArtifacts()
+        .artifacts(ParameterFieldHelper.getParameterFieldValue(artifactoryStoreConfig.getArtifacts())
                        .stream()
                        .map(a
                            -> ArtifactoryFile.builder()

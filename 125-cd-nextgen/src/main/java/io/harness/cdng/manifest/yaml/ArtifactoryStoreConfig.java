@@ -8,6 +8,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,6 +23,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -54,7 +56,12 @@ public class ArtifactoryStoreConfig implements FileStorageStoreConfig, Visitable
   @Wither
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
   private ParameterField<String> repositoryName;
-  @NotNull @Wither @JsonProperty("artifacts") List<ArtifactoryFromYaml> artifacts;
+  @ApiModelProperty(dataType = "[Lio.harness.cdng.manifest.yaml.ArtifactoryFromYaml;")
+  @YamlSchemaTypes(value = {runtime})
+  @NotNull
+  @Wither
+  @JsonProperty("artifacts")
+  ParameterField<List<ArtifactoryFromYaml>> artifacts;
 
   @Override
   public String getKind() {
@@ -104,7 +111,8 @@ public class ArtifactoryStoreConfig implements FileStorageStoreConfig, Visitable
     return ArtifactoryStorageConfigDTO.builder()
         .connectorRef(ParameterFieldHelper.getParameterFieldValue(connectorRef))
         .repositoryName(ParameterFieldHelper.getParameterFieldValue(repositoryName))
-        .artifacts(artifacts.stream()
+        .artifacts(ParameterFieldHelper.getParameterFieldValue(artifacts)
+                       .stream()
                        .map(artifactoryFromYaml
                            -> ArtifactoryFile.builder()
                                   .name(ParameterFieldHelper.getParameterFieldValue(

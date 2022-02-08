@@ -26,15 +26,16 @@ public class ArtifactoryStorageConfigDTO implements FileStorageConfigDTO {
     return ArtifactoryStoreConfig.builder()
         .connectorRef(ParameterField.createValueField(connectorRef))
         .repositoryName(ParameterField.createValueField(repositoryName))
-        .artifacts(artifacts.stream()
-                       .map(artifactoryFile
-                           -> ArtifactoryFromYaml.builder()
-                                  .artifactFile(ArtifactFile.builder()
-                                                    .name(ParameterField.createValueField(artifactoryFile.getName()))
-                                                    .path(ParameterField.createValueField(artifactoryFile.getPath()))
-                                                    .build())
-                                  .build())
-                       .collect(Collectors.toList()))
+        .artifacts(ParameterField.createValueField(
+            artifacts.stream()
+                .map(artifactoryFile
+                    -> ArtifactoryFromYaml.builder()
+                           .artifactFile(ArtifactFile.builder()
+                                             .name(ParameterField.createValueField(artifactoryFile.getName()))
+                                             .path(ParameterField.createValueField(artifactoryFile.getPath()))
+                                             .build())
+                           .build())
+                .collect(Collectors.toList())))
         .build();
   }
 }

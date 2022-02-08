@@ -206,7 +206,7 @@ public class TerraformStepHelperTest extends CategoryTest {
     assertThat(output).isNotNull();
     ArtifactoryStoreConfig configFiles = (ArtifactoryStoreConfig) output.getFileStoreConfig();
     assertThat(configFiles).isNotNull();
-    assertThat(configFiles.getArtifacts().size()).isEqualTo(1);
+    assertThat(ParameterFieldHelper.getParameterFieldValue(configFiles.getArtifacts()).size()).isEqualTo(1);
     List<TerraformVarFileConfig> varFileConfigs = output.getVarFileConfigs();
     assertThat(varFileConfigs).isNotNull();
     assertThat(varFileConfigs.size()).isEqualTo(2);
@@ -681,39 +681,6 @@ public class TerraformStepHelperTest extends CategoryTest {
     Map<String, TerraformVarFile> varFilesMap = new HashMap<>();
     List<TerraformVarFileInfo> terraformVarFileInfo = helper.toTerraformVarFileInfo(varFilesMap, ambiance);
     assertThat(terraformVarFileInfo).isEmpty();
-  }
-
-  @Test(expected = NullPointerException.class)
-  @Owner(developers = NAMAN_TALAYCHA)
-  @Category(UnitTests.class)
-  public void testPrepareTerraformVarFileInfoNegativeScenario() {
-    Ambiance ambiance = getAmbiance();
-    ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder()
-                                         .name("terraform")
-                                         .identifier("terraform")
-                                         .connectorType(GITHUB)
-                                         .connectorConfig(GitConfigDTO.builder()
-                                                              .gitAuthType(GitAuthType.HTTP)
-                                                              .gitConnectionType(GitConnectionType.ACCOUNT)
-                                                              .delegateSelectors(Collections.singleton("delegateName"))
-                                                              .url("https://github.com/wings-software")
-                                                              .branchName("master")
-                                                              .build())
-                                         .build();
-
-    doReturn(connectorInfo).when(mockK8sStepHelper).getConnector(anyString(), any());
-    doReturn(SSHKeySpecDTO.builder().build())
-        .when(mockGitConfigAuthenticationInfoHelper)
-        .getSSHKey(any(), anyString(), anyString(), anyString());
-    doReturn(Collections.emptyList())
-        .when(mockGitConfigAuthenticationInfoHelper)
-        .getEncryptedDataDetails(any(), any(), any());
-
-    List<TerraformVarFileConfig> varFileConfigs = new LinkedList<>();
-    TerraformVarFileConfig remoteFileConfig = TerraformRemoteVarFileConfig.builder().build();
-    varFileConfigs.add(remoteFileConfig);
-
-    helper.prepareTerraformVarFileInfo(varFileConfigs, ambiance);
   }
 
   @Test

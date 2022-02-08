@@ -19,9 +19,9 @@ import lombok.NoArgsConstructor;
 
 @OwnedBy(CDP)
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ArtifactoryFromYaml {
   @NotNull ArtifactFile artifactFile;
 }

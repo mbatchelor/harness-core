@@ -22,9 +22,9 @@ import lombok.NoArgsConstructor;
 
 @OwnedBy(CDP)
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class ArtifactFile {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull ParameterField<String> name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @NotNull ParameterField<String> path;
