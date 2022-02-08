@@ -58,7 +58,49 @@ BAZEL_MODULES="\
   //800-pipeline-service:module \
   //820-platform-service:module \
   //820-platform-service:module_deploy.jar \
+  //830-notification-service:module \
+  //830-resource-group:module \
+  //835-notification-senders:module \
   //878-pipeline-service-utilities:module \
+  //890-sm-core:module \
+  //910-delegate-service-driver:module \
+  //920-delegate-service-beans/src/main/proto:all \
+  //920-delegate-service-beans:module \
+  //925-access-control-service:module \
+  //930-delegate-tasks:module \
+  //930-ng-core-clients:module \
+  //940-ng-audit-service:module \
+  //940-notification-client:module \
+  //940-notification-client:module_deploy.jar \
+  //940-resource-group-beans:module \
+  //942-enforcement-sdk:module \
+  //945-account-mgmt:module \
+  //945-ng-audit-client:module \
+  //946-access-control-aggregator:module \
+  //947-access-control-core:module \
+  //948-access-control-sdk:module \
+  //949-access-control-commons:module \
+  //950-delegate-tasks-beans/src/main/proto:all \
+  //950-delegate-tasks-beans:module \
+  //950-ng-project-n-orgs:module \
+  //950-wait-engine:module \
+  //951-ng-audit-commons:module \
+  //953-events-api/src/main/proto:all \
+  //953-events-api:module \
+  //955-filters-sdk:module \
+  //955-outbox-sdk:module \
+  //958-migration-sdk:module \
+  //960-ng-core-beans:module \
+  //960-notification-beans/src/main/proto:all \
+  //960-notification-beans:module \
+  //960-persistence:module \
+  //960-persistence:supporter-test \
+  //970-api-services-beans:module \
+  //970-grpc:module \
+  //970-ng-commons:module \
+  //980-commons:module \
+  //990-commons-test:module \
+  //999-annotations:module \
 "
 
 bazel ${bazelrc} build $BAZEL_MODULES ${BAZEL_ARGUMENTS} --remote_download_outputs=all
@@ -148,5 +190,41 @@ build_protocol_info(){
   rm module-deps.sh /tmp/ProtoDeps.text /tmp/KryoDeps.text
 }
 
+build_bazel_application 940-notification-client
 build_bazel_application 820-platform-service
+
+build_bazel_module 830-notification-service
+build_bazel_module 830-resource-group
+build_bazel_module 835-notification-senders
 build_bazel_module 878-pipeline-service-utilities
+build_bazel_module 890-sm-core
+build_bazel_module 910-delegate-service-driver
+build_bazel_module 920-delegate-service-beans
+build_bazel_module 930-delegate-tasks
+build_bazel_module 930-ng-core-clients
+build_bazel_module 940-ng-audit-service
+build_bazel_module 940-resource-group-beans
+build_bazel_module 945-ng-audit-client
+build_bazel_module 946-access-control-aggregator
+build_bazel_module 947-access-control-core
+build_bazel_module 948-access-control-sdk
+build_bazel_module 949-access-control-commons
+build_bazel_module 950-delegate-tasks-beans
+build_bazel_module 950-ng-project-n-orgs
+build_bazel_module 950-wait-engine
+build_bazel_module 951-ng-audit-commons
+build_bazel_module 953-events-api
+build_bazel_module 955-filters-sdk
+build_bazel_module 955-outbox-sdk
+build_bazel_module 958-migration-sdk
+build_bazel_module 960-ng-core-beans
+build_bazel_module 960-notification-beans
+build_bazel_module 960-persistence
+build_bazel_module 970-api-services-beans
+build_bazel_module 970-grpc
+build_bazel_module 970-ng-commons
+build_bazel_module 980-commons
+build_bazel_module 990-commons-test
+build_bazel_module 999-annotations
+
+
