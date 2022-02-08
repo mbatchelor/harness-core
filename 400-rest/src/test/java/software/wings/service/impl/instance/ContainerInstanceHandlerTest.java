@@ -66,11 +66,13 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.runtime.NoInstancesException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
@@ -155,6 +157,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock private ContainerSync containerSync;
   @Mock private DeploymentService deploymentService;
   @Mock private K8sStateHelper k8sStateHelper;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject ContainerInstanceHandler containerInstanceHandler;
 
   @Inject private HPersistence persistence;
@@ -179,6 +182,8 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     doReturn(Service.builder().name(SERVICE_NAME).build())
         .when(serviceResourceService)
         .getWithDetails(anyString(), anyString());
+
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, ACCOUNT_ID);
   }
 
   private InfrastructureMapping getInframapping(String inframappingType) {
@@ -1795,11 +1800,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
-    try {
-      containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
-    } catch (NoInstancesException ignore) {
-      // expected
-    }
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
 
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_1_ID));
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
@@ -1843,11 +1844,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
-    try {
-      containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
-    } catch (NoInstancesException ignore) {
-      // expected
-    }
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
 
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_1_ID));
     verify(instanceService, never()).delete(Sets.newHashSet(INSTANCE_2_ID));
@@ -1860,11 +1857,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     infrastructureMapping = DirectKubernetesInfrastructureMapping.builder().build();
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
 
-    try {
-      containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
-    } catch (NoInstancesException ignore) {
-      // expected
-    }
+    containerInstanceHandler.processInstanceSyncResponseFromPerpetualTask(infrastructureMapping, responseData);
 
     verify(instanceService, times(1)).delete(Sets.newHashSet(INSTANCE_2_ID));
   }
@@ -2236,7 +2229,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         createK8sPodInstance("instance2", "releaseX", "namespaceX"));
 
     K8sInstanceSyncResponse instanceSyncResponse = creteK8sPodSyncResponseWith("releaseX", "namespaceX");
-
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, ACCOUNT_ID);
     assertThatThrownBy(()
                            -> assertSavedAndDeletedInstances(
                                instancesInDb, instanceSyncResponse, emptyList(), asList("instance1", "instance2")))
@@ -2248,6 +2241,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowNoInstancesExceptionNOInstancesExistsInDb() {
     K8sInstanceSyncResponse instanceSyncResponse = creteK8sPodSyncResponseWith("releaseX", "namespaceX");
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, ACCOUNT_ID);
 
     assertThatThrownBy(
         () -> assertSavedAndDeletedInstances(emptyList(), instanceSyncResponse, emptyList(), emptyList()))
@@ -2266,6 +2260,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                              .isEcs(false)
                                              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                              .build();
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, ACCOUNT_ID);
 
     assertThatThrownBy(() -> assertSavedAndDeletedInstances(instancesInDb, syncResponse, emptyList(), emptyList()))
         .isInstanceOf(NoInstancesException.class);
@@ -2276,6 +2271,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowNoInstancesExceptionForKubernetesContainerDeploymentNoInstancesInDb() {
     ContainerSyncResponse syncResponse = createContainerSyncResponseWith("release-name", "default");
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, ACCOUNT_ID);
 
     assertThatThrownBy(() -> assertSavedAndDeletedInstances(emptyList(), syncResponse, emptyList(), emptyList()))
         .isInstanceOf(NoInstancesException.class);
@@ -2296,6 +2292,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     ContainerInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder()
             .appId(APP_ID)
+            .accountId(ACCOUNT_ID)
             .infraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
             .build();
     infrastructureMapping.setUuid(UUID);
@@ -2337,6 +2334,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     ContainerInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder()
             .appId(APP_ID)
+            .accountId(ACCOUNT_ID)
             .infraMappingType(InfrastructureMappingType.DIRECT_KUBERNETES.name())
             .build();
     infrastructureMapping.setUuid(UUID);

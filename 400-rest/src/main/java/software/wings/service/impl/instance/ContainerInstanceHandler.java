@@ -173,6 +173,9 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       return;
     }
 
+    boolean keepPTAfterDownScale = instanceSyncFlow == PERPETUAL_TASK
+        && featureFlagService.isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, containerInfraMapping.getAccountId());
+
     if (instanceSyncFlow == PERPETUAL_TASK && responseData != null) {
       ContainerMetadata perpetualTaskMetadata = getContainerMetadataFromInstanceSyncResponse(responseData);
 
@@ -187,7 +190,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           // Current logic is to catch any exception and if there is no successful sync status during 7 days then delete
           // all infra perpetual tasks. We're exploiting this to handle the case when replica is scaled down to 0 and
           // after n time is scaled back, so we will delete perpetual task only if after 7 days there are no pods
-          if (isEmpty(syncResponse.getK8sPodInfoList())) {
+          if (keepPTAfterDownScale && isEmpty(syncResponse.getK8sPodInfoList())) {
             // In this case there is nothing to be processed since there is no instances in db that need to be removed
             log.info("Still there is no pods found for [app: {}, namespace: {}, release name: {}]", appId,
                 syncResponse.getNamespace(), syncResponse.getReleaseName());
@@ -204,7 +207,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           // Current logic is to catch any exception and if there is no successful sync status during 7 days then delete
           // all infra perpetual tasks. We're exploiting this to handle the case when replica is scaled down to 0 and
           // after n time is scaled back, so we will delete perpetual task only if after 7 days there are no pods
-          if (isEmpty(syncResponse.getContainerInfoList())) {
+          if (keepPTAfterDownScale && isEmpty(syncResponse.getContainerInfoList())) {
             // In this case there is nothing to be processed since there is no instances in db that need to be removed
             log.info("Still there is no containers found for [app: {}, namespace: {}, release name: {}]", appId,
                 syncResponse.getNamespace(), syncResponse.getReleaseName());
@@ -251,7 +254,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
               // delete all infra perpetual tasks. We're exploiting this to handle the case when replica is scaled down
               // to 0 and after n time is scaled back, so we will delete perpetual task only if after 7 days there are
               // no pods
-              if (isEmpty(syncResponse.getK8sPodInfoList())) {
+              if (keepPTAfterDownScale && isEmpty(syncResponse.getK8sPodInfoList())) {
                 log.info("No pods found for [app: {}, namespace: {}, release name: {}]", appId,
                     syncResponse.getNamespace(), syncResponse.getReleaseName());
                 noInstancesException =
@@ -285,7 +288,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
             // delete all infra perpetual tasks. We're exploiting this to handle the case when replica is scaled down to
             // 0 and after n time is scaled back, so we will delete perpetual task only if after 7 days there are no
             // containers
-            if (isEmpty(syncResponse.getContainerInfoList())) {
+            if (keepPTAfterDownScale && isEmpty(syncResponse.getContainerInfoList())) {
               log.info("No containers found for [app: {}, namespace: {}, release name: {}]", appId,
                   syncResponse.getNamespace(), syncResponse.getReleaseName());
 
@@ -298,7 +301,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       }
     }
 
-    if (noInstancesException != null) {
+    if (keepPTAfterDownScale && noInstancesException != null) {
       throw noInstancesException;
     }
   }
@@ -1455,19 +1458,21 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
 
     return response instanceof K8sTaskExecutionResponse
-        ? getK8sPerpetualTaskStatus((K8sTaskExecutionResponse) response)
-        : getContainerSyncPerpetualTaskStatus((ContainerSyncResponse) response);
+        ? getK8sPerpetualTaskStatus((K8sTaskExecutionResponse) response, infrastructureMapping.getAccountId())
+        : getContainerSyncPerpetualTaskStatus((ContainerSyncResponse) response, infrastructureMapping.getAccountId());
   }
 
-  private Status getK8sPerpetualTaskStatus(K8sTaskExecutionResponse response) {
+  private Status getK8sPerpetualTaskStatus(K8sTaskExecutionResponse response, String accountId) {
     boolean success = response.getCommandExecutionStatus() == SUCCESS;
     K8sInstanceSyncResponse k8sInstanceSyncResponse = (K8sInstanceSyncResponse) response.getK8sTaskResponse();
+    boolean keepPTAfterDownscale = featureFlagService.isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, accountId);
+    boolean deleteTask = !keepPTAfterDownscale && success && isEmpty(k8sInstanceSyncResponse.getK8sPodInfoList());
     String errorMessage = success ? null : response.getErrorMessage();
 
-    return Status.builder().retryable(true).errorMessage(errorMessage).success(success).build();
+    return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();
   }
 
-  private Status getContainerSyncPerpetualTaskStatus(ContainerSyncResponse response) {
+  private Status getContainerSyncPerpetualTaskStatus(ContainerSyncResponse response, String accountId) {
     boolean success = response.getCommandExecutionStatus() == SUCCESS;
     boolean deleteTask;
     if (response.isEcs()) {
@@ -1475,7 +1480,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       deleteTask = success && !response.isEcsServiceExists();
     } else {
       // K8s v1
-      deleteTask = false;
+      boolean keepPTAfterDownscale = featureFlagService.isEnabled(FeatureName.KEEP_PT_AFTER_K8S_DOWNSCALE, accountId);
+      deleteTask = !keepPTAfterDownscale && success && isEmpty(response.getContainerInfoList());
     }
 
     String errorMessage = success ? null : response.getErrorMessage();
