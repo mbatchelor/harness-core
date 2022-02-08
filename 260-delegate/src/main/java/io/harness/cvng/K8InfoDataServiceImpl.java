@@ -9,7 +9,6 @@ package io.harness.cvng;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.NOT_OLDER_THAN;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -61,7 +60,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
       V1NamespaceList v1NamespaceList = coreV1Api.listNamespace(
-          null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, NOT_OLDER_THAN, 60, Boolean.FALSE);
+          null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, null, 60, Boolean.FALSE);
       List<String> rv = new ArrayList<>();
       v1NamespaceList.getItems().forEach(v1Namespace -> {
         if (isNotEmpty(filter)
@@ -87,7 +86,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
       V1PodList podList = coreV1Api.listNamespacedPod(
-          namespace, null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, NOT_OLDER_THAN, 60, Boolean.FALSE);
+          namespace, null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, null, 60, Boolean.FALSE);
       Set<String> rv = new HashSet<>();
       podList.getItems().forEach(viPod -> {
         List<V1OwnerReference> ownerReferences = viPod.getMetadata().getOwnerReferences();
@@ -123,8 +122,8 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
-      CoreV1EventList v1EventList = coreV1Api.listEventForAllNamespaces(
-          Boolean.TRUE, null, null, null, 10, null, null, NOT_OLDER_THAN, 60, Boolean.FALSE);
+      CoreV1EventList v1EventList =
+          coreV1Api.listEventForAllNamespaces(Boolean.TRUE, null, null, null, 10, null, null, null, 60, Boolean.FALSE);
       List<String> rv = new ArrayList<>();
       v1EventList.getItems().forEach(v1Event -> { rv.add(v1Event.getMessage()); });
       return rv;
