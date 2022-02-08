@@ -49,10 +49,11 @@ public class HarnessToGitPushInfoGrpcServiceTest extends GitSyncTestBase {
                                       .build();
     Principal principal = Principal.newBuilder().setUserPrincipal(userPrincipal).build();
     FileInfo fileInfo = buildFileInfo(principal);
-    GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
-    harnessToGitPushInfoGrpcService.setPrincipal(fileInfo);
-    assertThat(SecurityContextBuilder.getPrincipal().getType()).isEqualTo(PrincipalType.USER);
-    assertThat(SourcePrincipalContextBuilder.getSourcePrincipal().getName()).isEqualTo(name);
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      harnessToGitPushInfoGrpcService.setPrincipal(fileInfo);
+      assertThat(SecurityContextBuilder.getPrincipal().getType()).isEqualTo(PrincipalType.USER);
+      assertThat(SourcePrincipalContextBuilder.getSourcePrincipal().getName()).isEqualTo(name);
+    }
   }
 
   private FileInfo buildFileInfo(Principal principal) {
