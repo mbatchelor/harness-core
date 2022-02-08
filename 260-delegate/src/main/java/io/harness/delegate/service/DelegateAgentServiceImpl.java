@@ -2630,7 +2630,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());
       applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
     } catch (Exception e) {
-      SendErrorResponse(delegateTaskPackage);
+      sendErrorResponse(delegateTaskPackage);
     }
   }
 
@@ -2657,7 +2657,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     metricRegistry.recordGaugeValue(TASKS_CURRENTLY_EXECUTING, new String[] {DELEGATE_NAME}, tasksExecutionCount);
   }
 
-  private void SendErrorResponse(DelegateTaskPackage delegateTaskPackage) {
+  private void sendErrorResponse(DelegateTaskPackage delegateTaskPackage) {
     String taskId = delegateTaskPackage.getDelegateTaskId();
     DelegateTaskResponse taskResponse = DelegateTaskResponse.builder()
                                             .accountId(delegateTaskPackage.getAccountId())
@@ -2665,12 +2665,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .build();
     log.info("Sending error response for task{}", taskId);
     try {
-      Response<ResponseBody> resp =
-          delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
-      if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
-        log.info("Task {} response sent to manager", taskId);
-      } else {
-        log.warn("Failed to send response for task {}", taskId);
+      Response<ResponseBody> resp = null;
+      int retries = 5;
+      for (int attempt = 0; attempt < retries; attempt++) {
+        resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
+        if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
+          log.info("Task {} response sent to manager", taskId);
+          return;
+        }
+        log.warn("Failed to send response for task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
+            retries > 0 ? "Retrying." : "Giving up.");
+        sleep(ofSeconds(FibonacciBackOff.getFibonacciElement(attempt)));
       }
     } catch (Exception e) {
       log.error("Unable to send response to manager", e);
