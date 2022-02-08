@@ -49,6 +49,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
@@ -127,8 +128,33 @@ public class PlanNodeExecutionStrategy
 
   private NodeExecution createNodeExecution(
       @NotNull Ambiance ambiance, @NotNull PlanNode node, String notifyId, String parentId, String previousId) {
+    final NodeExecution persistedNodeExecution = persistNodeExecution(ambiance, node, notifyId, parentId, previousId);
+    if (persistedNodeExecution == null) {
+      throw new RuntimeException("Failed to save node execution");
+    }
+
+    return transactionHelper.performTransaction(() -> {
+      boolean skipUnresolvedExpressionsCheck = node.isSkipUnresolvedExpressionsCheck();
+      log.info("Starting to Resolve step parameters and Inputs");
+      PmsStepParameters resolvedParameters =
+          resolveParameters(ambiance, node.getStepParameters(), skipUnresolvedExpressionsCheck);
+      PmsStepParameters resolvedInputs =
+          resolveParameters(ambiance, node.getStepParameters(), skipUnresolvedExpressionsCheck);
+      NodeExecution updatedNodeExecution =
+          nodeExecutionService.update(persistedNodeExecution.withResolvedParams(resolvedParameters));
+      NodeExecutionsInfo nodeExecutionsInfo = NodeExecutionsInfo.builder()
+                                                  .nodeExecutionId(persistedNodeExecution.getUuid())
+                                                  .planExecutionId(ambiance.getPlanExecutionId())
+                                                  .resolvedInputs(resolvedInputs)
+                                                  .build();
+      nodeExecutionsInfoRepository.save(nodeExecutionsInfo);
+      return updatedNodeExecution;
+    });
+  }
+
+  private NodeExecution persistNodeExecution(
+      @NotNull Ambiance ambiance, @NotNull PlanNode node, String notifyId, String parentId, String previousId) {
     String uuid = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    boolean skipUnresolvedExpressionsCheck = node.isSkipUnresolvedExpressionsCheck();
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .uuid(uuid)
                                       .planNode(node)
@@ -147,27 +173,14 @@ public class PlanNodeExecutionStrategy
                                       .stepType(node.getStepType())
                                       .nodeId(node.getUuid())
                                       .build();
-    return transactionHelper.performTransaction(() -> {
-      NodeExecution savedNodeExecution = nodeExecutionService.save(nodeExecution);
-      log.info("Starting to Resolve step parameters and Inputs");
-      Object resolvedStepParameters =
-          pmsEngineExpressionService.resolve(ambiance, node.getStepParameters(), skipUnresolvedExpressionsCheck);
-      PmsStepParameters pmsStepParameters = PmsStepParameters.parse(
-          OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepParameters));
-      savedNodeExecution = nodeExecutionService.update(savedNodeExecution.withResolvedParams(pmsStepParameters));
-      Object resolvedStepInputs =
-          pmsEngineExpressionService.resolve(ambiance, node.getStepInputs(), skipUnresolvedExpressionsCheck);
-      log.info("Step Parameters and Inputs Resolution complete");
-      NodeExecutionsInfo nodeExecutionsInfo =
-          NodeExecutionsInfo.builder()
-              .nodeExecutionId(uuid)
-              .planExecutionId(ambiance.getPlanExecutionId())
-              .resolvedInputs(PmsStepParameters.parse(
-                  OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs)))
-              .build();
-      nodeExecutionsInfoRepository.save(nodeExecutionsInfo);
-      return savedNodeExecution;
-    });
+    return nodeExecutionService.save(nodeExecution);
+  }
+
+  private PmsStepParameters resolveParameters(
+      Ambiance ambiance, OrchestrationMap unresolvedParams, boolean skipUnresolvedCheck) {
+    Object resolvedStepParameters = pmsEngineExpressionService.resolve(ambiance, unresolvedParams, skipUnresolvedCheck);
+    return PmsStepParameters.parse(
+        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepParameters));
   }
 
   @Override

@@ -52,11 +52,11 @@ public class PmsGraphStepDetailsServiceImpl implements PmsGraphStepDetailsServic
   }
 
   @Override
-  public void addStepInputs(String nodeExecutionId, String planExecutionId, PmsStepParameters stepParameters) {
+  public void addStepInputs(String nodeExecutionId, String planExecutionId, PmsStepParameters resolvedInputs) {
     NodeExecutionsInfo nodeExecutionsInfo = NodeExecutionsInfo.builder()
                                                 .nodeExecutionId(nodeExecutionId)
                                                 .planExecutionId(planExecutionId)
-                                                .resolvedInputs(stepParameters)
+                                                .resolvedInputs(resolvedInputs)
                                                 .build();
     if (!nodeExecutionsInfoRepository.findByNodeExecutionId(nodeExecutionId).isPresent()) {
       nodeExecutionsInfoRepository.save(nodeExecutionsInfo);
