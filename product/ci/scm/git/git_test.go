@@ -404,7 +404,7 @@ func TestGetLatestCommitOnFileOnNonExistingFile(t *testing.T) {
 }
 
 // TODO: Mohit Garg - Fix this test
-//func TestGetLatestCommitOnExistingFile(t *testing.T) {
+func TestGetLatestCommitOnExistingFile(t *testing.T) {
 //	provider :=	&pb.Provider{
 //			Hook: &pb.Provider_BitbucketCloud{
 //				BitbucketCloud: &pb.BitbucketCloudProvider{
@@ -425,9 +425,9 @@ func TestGetLatestCommitOnFileOnNonExistingFile(t *testing.T) {
 //
 //	assert.Nil(t, err, "no errors")
 //	assert.NotNil(t, latestCommitIdResponse.CommitId, "commit exists")
-//}
+}
 // TODO: Mohit Garg - Fix this test
-//func TestListCommitsBitbucket(t *testing.T) {
+func TestListCommitsBitbucket(t *testing.T) {
 //	in := &pb.ListCommitsRequest{
 //		Slug: "mohitgargharness/test-repository",
 //		Type: &pb.ListCommitsRequest_Branch{
@@ -448,7 +448,7 @@ func TestGetLatestCommitOnFileOnNonExistingFile(t *testing.T) {
 //
 //	assert.Nil(t, err, "no errors")
 //	assert.NotNil(t, len(got.CommitIds), "has commit")
-//}
+}
 
 
 func TestListCommitsBitbucketOnFile(t *testing.T) {

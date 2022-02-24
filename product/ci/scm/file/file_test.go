@@ -247,7 +247,7 @@ func TestUpdateFileNoMatchGithub(t *testing.T) {
 }
 
 // TODO: Mohit Garg - fix this test
-//func TestUpdateFilCommtConflictBitbucket(t *testing.T) {
+func TestUpdateFilCommtConflictBitbucket(t *testing.T) {
 //	in := &pb.FileModifyRequest{
 //		Slug:     "mohitgargharness/test-repository",
 //		Path:     "test-file.txt",
@@ -274,7 +274,7 @@ func TestUpdateFileNoMatchGithub(t *testing.T) {
 //
 //	assert.Nil(t, err, "no errors")
 //	assert.Equal(t, got.Status, int32(400), "status matches")
-//}
+}
 
 func TestDeleteFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -400,7 +400,7 @@ func TestFindFilesInBranch(t *testing.T) {
 }
 
 // TODO: Mohit Garg - fix this test
-//func TestFindFilesInBranchBitbucket(t *testing.T) {
+func TestFindFilesInBranchBitbucket(t *testing.T) {
 //	in := &pb.FindFilesInBranchRequest{
 //		Slug: "mohitgargharness/test-repository",
 //		Type: &pb.FindFilesInBranchRequest_Branch{
@@ -441,7 +441,7 @@ func TestFindFilesInBranch(t *testing.T) {
 //
 //	assert.Nil(t, err, "no errors")
 //	assert.NotNil(t, len(got.File), "Non-Null file count")
-//}
+}
 
 
 func TestFindFilesInCommit(t *testing.T) {
