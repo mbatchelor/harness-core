@@ -19,7 +19,6 @@ check_file_present $PROJFILE
 # Read contents of file into PROJECTS
 PROJECTS=$(<$PROJFILE)
 KEYPROJS=$(git log --pretty=oneline --abbrev-commit | awk "1;/Branching to release\//{exit}" | grep -o -iE '('${PROJECTS}')' | tr '[:lower:]' '[:upper:]' | sort | uniq)
-# IFS="|" read -r -a PROJSPLIT <<< "${PROJECTS}"
 # Set the release date of the version to the date that the build is being done.
 RELDATE=$(date +'%Y-%m-%d')
 # Set the next version number - this will be something like 1.23.5-704219
